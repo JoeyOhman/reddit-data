@@ -43,8 +43,9 @@ def comment_to_dict(com):
 def request_submissions(api, subreddit_name, latest_date, earliest_date, save_dir):
     counter = 0
     while latest_date > earliest_date:
-        print(f"Requesting {REQUEST_LIMIT} submissions, total={counter}")
         counter += REQUEST_LIMIT
+        if counter % 20000 == 0:
+            print(f"Requesting {REQUEST_LIMIT} submissions, total={counter}")
         submissions = list(api.search_submissions(before=latest_date,
                                                   after=earliest_date,
                                                   subreddit=subreddit_name,
@@ -78,8 +79,9 @@ def request_submissions(api, subreddit_name, latest_date, earliest_date, save_di
 def request_comments(api, subreddit_name, latest_date, earliest_date, save_dir):
     counter = 0
     while latest_date > earliest_date:
-        print(f"Requesting {REQUEST_LIMIT} comments, total={counter}")
         counter += REQUEST_LIMIT
+        if counter % 20000 == 0:
+            print(f"Requesting {REQUEST_LIMIT} comments, total={counter}")
         comments = list(api.search_comments(before=latest_date,
                                             after=earliest_date,
                                             subreddit=subreddit_name,
