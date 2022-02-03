@@ -2,7 +2,8 @@ import json
 
 from SubmissionTree import SubmissionTree
 
-DATA_PATH = "data/subreddit_Spel/year_2020"
+# DATA_PATH = "data/subreddit_Spel/year_2020"
+DATA_PATH = "data/subreddit_ISKbets/year_2021"
 
 
 def read_file(path):

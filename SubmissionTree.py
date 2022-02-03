@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Optional
 
 
 # TODO: Handle comments hanging loose? e.g. parent submission/comment is not present
@@ -7,14 +7,21 @@ class SubmissionTree:
     def __init__(self, submissions, comments):
         self.submissions = {data_dict['id']: Node(data_dict) for data_dict in submissions}
         self.comments = {data_dict['id']: Node(data_dict) for data_dict in comments}
-
+        self.comments_no_parent = {}
         for comment_id, comment_node in self.comments.items():
             parent_node = comment_node.get_parent(self.submissions, self.comments)
-            if parent_node is not None:
+            if parent_node is None:
+                self.comments_no_parent[comment_node.id] = comment_node
+            else:
                 parent_node.add_child(comment_node)
 
         for submission_id, submission_node in self.submissions.items():
             submission_node.print_children()
+            print("*" * 70)
+
+        print("#" * 150)
+        for comment_id, comment_node in self.comments_no_parent.items():
+            comment_node.print_children()
             print("*" * 70)
 
 
