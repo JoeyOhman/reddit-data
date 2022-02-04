@@ -40,12 +40,35 @@ def comment_to_dict(com):
     return com_dict
 
 
+def get_progress_so_far(file_path):
+    try:
+        with open(file_path, 'r') as f:
+            json_list = list(f)
+        if json_list[-1].strip() == "":
+            json_list = json_list[:-1]
+            # f.truncate(f.tell() - 1)
+        else:
+            with open(file_path, 'a') as f:
+                f.write("\n")  # Prepare newline for next append to this file
+        counter = len(json_list)
+        # "2021-11-12 09:04:37"
+        earliest_date = int(dt.datetime.strptime(json.loads(json_list[-1])['date'], '%Y-%m-%d %H:%M:%S').timestamp())
+        return earliest_date, counter
+    except FileNotFoundError:
+        return None
+
+    # return earliest_date, counter
+
+
 def request_submissions(api, subreddit_name, latest_date, earliest_date, save_dir):
     counter = 0
+    res = get_progress_so_far(save_dir + "/submissions.jsonl")
+    if res is not None:
+        latest_date, counter = res
     while latest_date > earliest_date:
         counter += REQUEST_LIMIT
         if counter % 20000 == 0:
-            print(f"Requesting {REQUEST_LIMIT} submissions, total={counter}")
+            print(f"total_submissions={counter}")
         submissions = list(api.search_submissions(before=latest_date,
                                                   after=earliest_date,
                                                   subreddit=subreddit_name,
@@ -53,13 +76,7 @@ def request_submissions(api, subreddit_name, latest_date, earliest_date, save_di
                                                           'created_utc', 'id', 'score'],
                                                   limit=REQUEST_LIMIT,
                                                   metadata=True))
-        # submissions = api.search_submissions(before=latest_date,
-        #                                           after=earliest_date,
-        #                                           subreddit=subreddit_name,
-        #                                           limit=REQUEST_LIMIT,
-        #                                           metadata=True)
-        # print("*" * 50)
-        # print(submissions[0])
+
         if len(submissions) == 0:
             break
         earliest_received = int(submissions[-1].created_utc)
@@ -78,10 +95,13 @@ def request_submissions(api, subreddit_name, latest_date, earliest_date, save_di
 
 def request_comments(api, subreddit_name, latest_date, earliest_date, save_dir):
     counter = 0
+    res = get_progress_so_far(save_dir + "/comments.jsonl")
+    if res is not None:
+        latest_date, counter = res
     while latest_date > earliest_date:
         counter += REQUEST_LIMIT
         if counter % 20000 == 0:
-            print(f"Requesting {REQUEST_LIMIT} comments, total={counter}")
+            print(f"total_comments={counter}")
         comments = list(api.search_comments(before=latest_date,
                                             after=earliest_date,
                                             subreddit=subreddit_name,
@@ -111,7 +131,8 @@ def main(args):
     subreddit_name = args.subreddit
     save_dir = f"data/subreddit_{subreddit_name}/year_{args.year}"
     Path(save_dir).mkdir(parents=True, exist_ok=True)
-    api = PushshiftAPI(max_retries=999, backoff=1)
+    # api = PushshiftAPI(max_retries=999, backoff=1)
+    api = PushshiftAPI()
 
     latest_date = int(dt.datetime(args.year, 12, 31, 23, 59, 59).timestamp())
     earliest_date = int(dt.datetime(args.year, 1, 1, 0, 0, 0).timestamp())

@@ -10,7 +10,7 @@ def read_file(path):
     with open(path, 'r') as json_file:
         json_list = list(json_file)
 
-    json_dicts = [json.loads(json_str) for json_str in json_list]
+    json_dicts = [json.loads(json_str) for json_str in json_list if json_str.strip() != ""]
     # json_dicts = [{json_dict['id']: json_dict} for json_dict in json_dicts]
     # TODO: list to dict, key -> rest of dict
     # json_dicts = {json_dict['id']: json_dict for json_dict in json_dicts}
