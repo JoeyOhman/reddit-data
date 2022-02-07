@@ -44,7 +44,7 @@ def get_progress_so_far(file_path):
     try:
         with open(file_path, 'r') as f:
             json_list = list(f)
-        if json_list[-1].strip() == "":
+        if len(json_list) > 0 and json_list[-1].strip() == "":
             json_list = json_list[:-1]
             # f.truncate(f.tell() - 1)
         else:
@@ -54,7 +54,7 @@ def get_progress_so_far(file_path):
         # "2021-11-12 09:04:37"
         earliest_date = int(dt.datetime.strptime(json.loads(json_list[-1])['date'], '%Y-%m-%d %H:%M:%S').timestamp())
         return earliest_date, counter
-    except FileNotFoundError:
+    except (FileNotFoundError, IndexError):
         return None
 
     # return earliest_date, counter
@@ -89,8 +89,9 @@ def request_submissions(api, subreddit_name, latest_date, earliest_date, save_di
                 json.dump(s, f, ensure_ascii=False)
                 f.write("\n")
 
-    with open(f'{save_dir}/submissions.jsonl', 'a') as f:
-        f.truncate(f.tell() - 1)
+    # if counter > 0:
+        # with open(f'{save_dir}/submissions.jsonl', 'a') as f:
+            # f.truncate(f.tell() - 1)
 
 
 def request_comments(api, subreddit_name, latest_date, earliest_date, save_dir):
@@ -123,8 +124,9 @@ def request_comments(api, subreddit_name, latest_date, earliest_date, save_dir):
                 json.dump(c, f, ensure_ascii=False)
                 f.write("\n")
 
-    with open(f'{save_dir}/comments.jsonl', 'a') as f:
-        f.truncate(f.tell() - 1)
+    # if counter > 0:
+        # with open(f'{save_dir}/comments.jsonl', 'a') as f:
+            # f.truncate(f.tell() - 1)
 
 
 def main(args):
@@ -132,7 +134,7 @@ def main(args):
     save_dir = f"data/subreddit_{subreddit_name}/year_{args.year}"
     Path(save_dir).mkdir(parents=True, exist_ok=True)
     # api = PushshiftAPI(max_retries=999, backoff=1)
-    api = PushshiftAPI()
+    api = PushshiftAPI(max_sleep=10)
 
     latest_date = int(dt.datetime(args.year, 12, 31, 23, 59, 59).timestamp())
     earliest_date = int(dt.datetime(args.year, 1, 1, 0, 0, 0).timestamp())
