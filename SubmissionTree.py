@@ -1,14 +1,18 @@
 from typing import Optional
+from tqdm import tqdm
 
 
 # TODO: Handle comments hanging loose? e.g. parent submission/comment is not present
 # TODO: Write results to file, in jsonl with trees or efficient format? Probably jsonl trees!
 class SubmissionTree:
     def __init__(self, submissions, comments):
+        print("Creating id->Node maps")
         self.submissions = {data_dict['id']: Node(data_dict, False) for data_dict in submissions}
         self.comments = {data_dict['id']: Node(data_dict, True) for data_dict in comments}
         self.comments_no_parent = {}
-        for comment_id, comment_node in self.comments.items():
+        print("Connecting nodes to their parents")
+        # if tqdm shows a lower number than number of read comments, some duplicates were removed
+        for comment_id, comment_node in tqdm(self.comments.items()):
             parent_node = comment_node.get_parent(self.submissions, self.comments)
             if parent_node is None:
                 self.comments_no_parent[comment_node.id] = comment_node

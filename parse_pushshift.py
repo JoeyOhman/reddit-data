@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 from pathlib import Path
 
 from SubmissionTree import SubmissionTree
@@ -22,9 +23,16 @@ def read_file(path):
     return json_dicts
 
 
-def parse_submissions_comments(dir_path):
-    submissions = read_file(dir_path + "/submissions.jsonl")
-    comments = read_file(dir_path + "/comments.jsonl")
+def read_submissions_comments(dir_path):
+    try:
+        submissions = read_file(dir_path + "/submissions.jsonl")
+    except FileNotFoundError:
+        submissions = []
+
+    try:
+        comments = read_file(dir_path + "/comments.jsonl")
+    except FileNotFoundError:
+        comments = []
     # print(json.dumps(comments[0], indent=4, ensure_ascii=False))
     # test_comment = comments['gh47is9']
     # print(json.dumps(test_comment, indent=4, ensure_ascii=False))
@@ -48,26 +56,44 @@ def write_trees_jsonl(out_path, tree_dicts):
                 f.write("\n")
 
 
-def main(args):
-    data_dir = f"{DATA_PATH}/subreddit_{args.subreddit}/year_{args.year}"
-    out_dir = f"{DATA_PATH}/trees_jsonl"
-    out_path = f"{out_dir}/subreddit_{args.subreddit}_{args.year}.jsonl"
-    Path(out_dir).mkdir(parents=True, exist_ok=True)
-    submissions, comments = parse_submissions_comments(data_dir)
-    sub_tree = SubmissionTree(submissions, comments)
+def process_subreddit(subreddit_dir, out_dir):
+    out_path = f"{out_dir}/{subreddit_dir}.jsonl"
+
+    submissions_all, comments_all = [], []
+    print("Reading submissions & comments for subreddit", )
+    for year in range(2006, 2022):
+        data_dir = f"{DATA_PATH}/{subreddit_dir}/year_{year}"
+        submissions, comments = read_submissions_comments(data_dir)
+        submissions_all += submissions
+        comments_all += comments
+
+    print(f"Read {len(submissions_all)} submissions and {len(comments_all)} comments")
+    sub_tree = SubmissionTree(submissions_all, comments_all)
+    print("Converting nodes into json trees, sorting children lists on date")
     tree_dicts = sub_tree.get_trees_as_json_list()
     # print(json.dumps(tree_dicts[0], ensure_ascii=False, indent=4))
     # print(json.dumps(tree_dicts[1], ensure_ascii=False, indent=4))
     # print(json.dumps(tree_dicts[2], ensure_ascii=False, indent=4))
+    print("Writing json trees to jsonl file")
     write_trees_jsonl(out_path, tree_dicts)
 
+
+def main(args):
+    # subreddit_dir = f"{DATA_PATH}/subreddit_{args.subreddit}
+    subreddit_dirs = [name for name in os.listdir(DATA_PATH) if os.path.isdir(os.path.join(DATA_PATH, name))]
+    subreddit_dirs = [name for name in subreddit_dirs if "subreddit_" in name]
+    # print(subreddit_dirs)
+    out_dir = f"{DATA_PATH}/trees_jsonl"
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+    for subreddit in subreddit_dirs:
+        process_subreddit(subreddit, out_dir)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--subreddit", type=str, default="Sweden",
                         help="The subreddit to request posts from.")
-    parser.add_argument("--year", type=int, default=2021,
-                        help="The year to request posts from.")
+    # parser.add_argument("--year", type=int, default=2021,
+    #                     help="The year to request posts from.")
     args = parser.parse_args()
 
     main(args)
