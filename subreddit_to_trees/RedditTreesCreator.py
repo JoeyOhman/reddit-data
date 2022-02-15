@@ -1,17 +1,25 @@
 from typing import Optional
 from tqdm import tqdm
+import html
 
 
 # TODO: Handle comments hanging loose? e.g. parent submission/comment is not present
 # TODO: Write results to file, in jsonl with trees or efficient format? Probably jsonl trees!
-class SubmissionTree:
+class RedditTreesCreator:
     def __init__(self, submissions, comments):
-        print("Creating id->Node maps")
-        self.submissions = {data_dict['id']: Node(data_dict, False) for data_dict in submissions}
-        self.comments = {data_dict['id']: Node(data_dict, True) for data_dict in comments}
+        print("Creating id->Node maps and removing duplicates/deleted")
+        deleted_filter = ["[deleted]", "[removed]", "None"]
+        self.submissions = {data_dict['id']: Node(data_dict, False) for data_dict in submissions
+                            if data_dict['author'] not in deleted_filter
+                            and data_dict['title'] not in deleted_filter
+                            and data_dict['body'] not in deleted_filter}
+        self.comments = {data_dict['id']: Node(data_dict, True) for data_dict in comments
+                         if data_dict['author'] not in deleted_filter
+                         and data_dict['body'] not in deleted_filter
+                         }
         self.comments_no_parent = {}
         print("Connecting nodes to their parents")
-        # if tqdm shows a lower number than number of read comments, some duplicates were removed
+        # if tqdm shows a lower number than number of read comments, some duplicates or deleted were removed
         for comment_id, comment_node in tqdm(self.comments.items()):
             parent_node = comment_node.get_parent(self.submissions, self.comments)
             if parent_node is None:
@@ -69,7 +77,7 @@ class Node:
     def print_children(self, indent=0):
         print("-" * indent * 4 + repr(self.data_dict['body']))
         for c in self.children:
-            c.print_children(indent+1)
+            c.print_children(indent + 1)
 
     def as_json(self, root_node):
         """
@@ -83,6 +91,11 @@ class Node:
         if self.is_comment:
             del self.data_dict['parent_id']
             del self.data_dict['link_id']
+
+        self.data_dict['body'] = html.unescape(self.data_dict['body'])
+        self.data_dict['author'] = html.unescape(self.data_dict['author'])
+        if not self.is_comment:
+            self.data_dict['title'] = html.unescape(self.data_dict['title'])
 
         if root_node:
             self.data_dict['is_comment'] = self.is_comment
