@@ -4,8 +4,10 @@ import os
 import sys
 # from collections import Counter
 from pathlib import Path
+import time
 
-from ThreadTree import ThreadTree
+from ThreadTree import ThreadNode, ThreadTree
+
 
 # DATA_PATH = "data/trees_jsonl"
 # subreddit_path = DATA_PATH + "/subreddit_uppsala.jsonl"
@@ -33,6 +35,7 @@ def sample_conversations(args, tree):
     num_samples = max(int(num_leaves * args.percentage_of_leaves), 1)
     for i in range(num_samples):
         conversation = thread_tree.extract_conversation()
+        # conversation = thread_tree.extract_conversation()
         if conversations is not None:
             conversations.append(conversation)
     # conversation = thread_tree.extract_conversation()
@@ -85,20 +88,23 @@ if __name__ == '__main__':
                         help="The path to the jsonl trees.")
     parser.add_argument("--out_dir", type=str, default="data/conversations",
                         help="The output path where samples conversations will be written.")
-    parser.add_argument("--percentage_of_leaves", type=float, default=0.5,
+    parser.add_argument("--percentage_of_leaves", type=float, default=1.0,
                         help="The percentage of potential conversations to sample from each tree.")
-    parser.add_argument("--min_len", type=int, default=20,
+    parser.add_argument("--min_len", type=int, default=30,
                         help="The minimum number of characters for a conversation.")
     parser.add_argument("--max_repeat", type=int, default=3,
                         help="The maximum number of times a post can be used, before it is omitted "
                              "(while children can still be used).")
-    parser.add_argument("--val_per_score", type=float, default=1.0,
+    parser.add_argument("--max_val_for_score", type=float, default=10.0,
                         help="The node value per reddit vote/score.")
-    parser.add_argument("--val_per_char", type=float, default=0.02,
+    parser.add_argument("--val_per_char", type=float, default=0.05,
                         help="The node value per character, i.e. prefer longer texts.")
-    parser.add_argument("--val_per_desc", type=float, default=0.2,
-                        help="The node value per descendant in tree.")
-    parser.add_argument("--val_sub_per_visit", type=float, default=10.0,
-                        help="How much to subtract from a node's value each visit.")
+    # parser.add_argument("--val_per_desc", type=float, default=0.2,
+    #                     help="The node value per descendant in tree.")
+    # parser.add_argument("--val_sub_per_visit", type=float, default=10.0,
+    #                     help="How much to subtract from a node's value each visit.")
     args = parser.parse_args()
+
+    start_time = time.time()
     main(args)
+    print(f"Time elapsed: {time.time() - start_time}s")
