@@ -6,6 +6,7 @@ import random
 
 NAMES: List[str] = []
 AUTHOR_TO_IDX: Dict[str, int] = {}
+INDICES_TAKEN: List[int] = []
 
 # NODE_LIST: List['ThreadNode'] = []
 
@@ -28,9 +29,10 @@ class ThreadTree:
 
     # def extract_conversation(self, num_retries=0):
     def extract_conversation(self):
-        global NAMES, AUTHOR_TO_IDX
+        global NAMES, AUTHOR_TO_IDX, INDICES_TAKEN
         AUTHOR_TO_IDX = dict()  # each conversation will have a new mapping, even though it's the same thread
-        random.shuffle(NAMES)
+        INDICES_TAKEN = []
+        # random.shuffle(NAMES)
 
         best_node = self._find_best_subtree()
         # if num_retries > 10:
@@ -104,7 +106,7 @@ class ThreadNode:
         self.author = json_tree['author']
         self.text = self._get_text(json_tree)
         self.max_repeat = args.max_repeat
-        self.visit_penalty = args.val_sub_per_visit
+        # self.visit_penalty = args.val_sub_per_visit
         self.parent = parent
         self.children = [ThreadNode(reply_dict, args, node_list, parent=self) for reply_dict in json_tree['replies']]
         self.num_visits = 0
@@ -180,4 +182,12 @@ class ThreadNode:
         # hsh = (int(hashlib.sha256(author_name.encode('utf-8')).hexdigest()[:16], 16) - 2 ** 63) % len(AUTHOR_TO_NAME)
         # return AUTHOR_TO_NAME[hsh]
         if author_name not in AUTHOR_TO_IDX:
-            AUTHOR_TO_IDX[author_name] = random.randint(0, len(NAMES) - 1)
+            sampled_idx = None
+            for i in range(100):
+                sampled_idx = random.randint(0, len(NAMES) - 1)
+                if sampled_idx not in INDICES_TAKEN:
+                    INDICES_TAKEN.append(sampled_idx)
+                    break
+
+            assert sampled_idx is not None
+            AUTHOR_TO_IDX[author_name] = sampled_idx

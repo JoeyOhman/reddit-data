@@ -24,10 +24,16 @@ from matplotlib import pyplot as plt
 
 
 def main():
-    with open("../data/conversations/conversations_new.jsonl", 'r') as f:
+    print("reading lines")
+    with open("../data/conversations/conversations_newest.jsonl", 'r') as f:
         json_lines = f.readlines()
 
-    json_texts = [json.loads(line)['text'] for line in json_lines]
+    print("extracting texts")
+    for i, line in enumerate(json_lines):
+        json_lines[i] = json.loads(line)['text']
+    json_texts = json_lines
+    # json_texts = [json.loads(line)['text'] for line in json_lines]
+    del json_lines
     for t in json_texts[0:2] + json_texts[1000:1002] + json_texts[50000:50002] + json_texts[-3: -1]:
         print("*" * 100)
         print(t)
