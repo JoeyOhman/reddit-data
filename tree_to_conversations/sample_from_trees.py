@@ -2,19 +2,10 @@ import argparse
 import json
 import os
 import sys
-# from collections import Counter
 from pathlib import Path
 import time
 
-from ThreadTree import ThreadNode, ThreadTree
-
-
-# DATA_PATH = "data/trees_jsonl"
-# subreddit_path = DATA_PATH + "/subreddit_uppsala.jsonl"
-
-
-# PERCENTAGE_OF_LEAVES = 0.5
-# ONLY_KEEP_LONGER_THAN = 30
+from ThreadTree import ThreadTree
 
 
 def read_trees(file_path):
@@ -35,27 +26,19 @@ def sample_conversations(args, tree):
     num_samples = max(int(num_leaves * args.percentage_of_leaves), 1)
     for i in range(num_samples):
         conversation = thread_tree.extract_conversation()
-        # conversation = thread_tree.extract_conversation()
         if conversations is not None:
             conversations.append(conversation)
-    # conversation = thread_tree.extract_conversation()
-    # return num_leaves, conversations
     return conversations
 
 
 def sample_conversations_from_subreddit(args, subreddit_file):
     trees = read_trees(subreddit_file)
     conversations = []
-    # num_leaves_list = []
+
     for tree in trees:
-        # num_leaves, convs = sample_conversations(args, tree)
         convs = sample_conversations(args, tree)
         conversations += [c for c in convs if c is not None and len(c) > args.min_len]
-        # num_leaves_list.append(num_leaves)
 
-    # print(Counter(num_leaves_list))
-    # print(len(conversations))
-    # print(conversations[2])
     return conversations
 
 
@@ -77,9 +60,6 @@ def main(args):
                 c_dict = {"text": c}
                 json.dump(c_dict, f, ensure_ascii=False)
                 f.write("\n")
-                # if not (subreddit_file == subreddit_files[-1] and idx == len(convs) - 1):
-                    # f.write("\n")
-        # exit()
 
 
 if __name__ == '__main__':

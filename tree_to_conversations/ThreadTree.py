@@ -8,8 +8,6 @@ NAMES: List[str] = []
 AUTHOR_TO_IDX: Dict[str, int] = {}
 INDICES_TAKEN: List[int] = []
 
-# NODE_LIST: List['ThreadNode'] = []
-
 
 def _setup_name_map():
     global NAMES
@@ -27,7 +25,6 @@ class ThreadTree:
         self._normalize_vote_scores()  # min-max normalization to avoid negative values
         self.extracted_seqs = []
 
-    # def extract_conversation(self, num_retries=0):
     def extract_conversation(self):
         global NAMES, AUTHOR_TO_IDX, INDICES_TAKEN
         AUTHOR_TO_IDX = dict()  # each conversation will have a new mapping, even though it's the same thread
@@ -35,20 +32,14 @@ class ThreadTree:
         # random.shuffle(NAMES)
 
         best_node = self._find_best_subtree()
-        # if num_retries > 10:
-        #     return None
         chosen_nodes_list = []
         best_node.get_path(chosen_nodes_list)
-        # ids_list = [node.id for node in chosen_nodes_list]
-        # if ids_list in self.extracted_seqs:
-        #     return None
-        # self.extracted_seqs.append(ids_list)
         text_to_return = self._node_list_to_text(chosen_nodes_list)
         for author_name, author_idx in AUTHOR_TO_IDX.items():
             text_to_return = text_to_return.replace(author_name, NAMES[author_idx])
+
         # clean up! remove all visited nodes with no unvisited children
         # each time a node is removed, make its parent chain's score dirty
-
         self._clean_up_parent_chain(chosen_nodes_list)
 
         return text_to_return
@@ -136,15 +127,12 @@ class ThreadNode:
         # child_scores = [child._get_node_value() for child in self.children]
         child_scores = [child.get_subtree_max_value() for child in self.children]
         chosen_child = self.children[np.argmax(child_scores)]
-        # node_list.append(chosen_child)
         chosen_child.get_path(node_list)
 
     def set_node_base_value(self):
         # Prioritize
         # high score: proxy for value of information according to humans
         # long texts: more data for model, scaled down to not take that into account
-        # many descendants: indicates more possible paths / larger subtree
-        # 1 score = 50 characters = 5 descendants
         self.base_value = self.vote_score * self.args.max_val_for_score + len(self.text) * self.args.val_per_char
         # + self.num_descendants * args.val_per_desc
 
@@ -179,8 +167,6 @@ class ThreadNode:
 
     @staticmethod
     def _add_author_mapping(author_name):
-        # hsh = (int(hashlib.sha256(author_name.encode('utf-8')).hexdigest()[:16], 16) - 2 ** 63) % len(AUTHOR_TO_NAME)
-        # return AUTHOR_TO_NAME[hsh]
         if author_name not in AUTHOR_TO_IDX:
             sampled_idx = None
             for i in range(100):

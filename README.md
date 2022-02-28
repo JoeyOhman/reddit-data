@@ -3,6 +3,14 @@ This repository is used for downloading reddit data with the pushshift API and p
 
 `pip install -r requirements.txt`
 
+A submission node (OP post) contains a title and a body, and replies only a body. The final conversation format is:
+```
+<Author>: <Title> - <Body>
+<Author>: <Body>
+<Author>: <Body>
+...
+```
+
 ## Fetching and formatting data
 
 ### Download through Pushshift API
@@ -48,8 +56,6 @@ Reddit usernames are consistently mapped to random first names found in `trees_t
 2. The current data spans [2006-2021], some data should be available for 2022 as well. It is unlikely that there is a point to try and fetch data prior to 2006.
 
 ### Formatting
-1. How to format the conversations better? How to handle newlines to easily distinguish between posts?
-2. Submissions (not replies, but OP post), contain a title and a body. How should this be formatted? Current separator is dash: "title - body"
 3. Author names are changed, with no respect to language, e.g. Icelandic names can show up in Swedish language and vice versa.
 5. Author names are changed in the text as well, but what if someone has a common word as their name? Then this will get swapped as well. 
 6. To dodge all problems, should we even use author name replacement? One could argue that these random names are actually useful to allow the model to identify and work with usernames.
