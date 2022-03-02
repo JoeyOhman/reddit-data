@@ -11,7 +11,7 @@ VAL_PER_CHAR=0.05
 
 # VAL_PER_DESCENDANT=0.2
 # VAL_SUB_PER_VISIT=10
-
+# tar -zcvf conversations_lang_split.tar.gz conversations_lang_split/
 
 python3 tree_to_conversations/sample_from_trees.py \
     --in_dir $INPUT_TREES_DIR \
